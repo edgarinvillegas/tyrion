@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import uuid
+import json
 
 import redis
 
@@ -35,9 +36,9 @@ else:
     redis_db = os.environ.get('SNAPPASS_REDIS_DB', 0)
     redis_client = redis.StrictRedis(
         host=redis_host, port=redis_port, db=redis_db)
-REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'snappass')
+REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion')
 
-TIME_CONVERSION = {'week': 604800, 'day': 86400, 'hour': 3600}
+TIME_CONVERSION = {'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
 
 
 def check_redis_alive(fn):
@@ -105,6 +106,7 @@ def set_password(password, ttl):
 
 @check_redis_alive
 def get_password(token):
+    print 'GET PASSWORD'
     """
     From a given token, return the initial password.
 
@@ -120,8 +122,13 @@ def get_password(token):
         if decryption_key is not None:
             password = decrypt(password, decryption_key)
 
-        return password.decode('utf-8')
-
+        contentStr = password.decode('utf-8')
+        print contentStr
+        contentObj = json.loads(contentStr)
+        print contentObj
+        print contentObj['email']
+        print contentObj['message']
+        return contentStr
 
 @check_redis_alive
 def password_exists(token):
@@ -148,7 +155,9 @@ def clean_input():
     if time_period not in TIME_CONVERSION:
         abort(400)
 
-    return TIME_CONVERSION[time_period], request.form['password']
+    #return TIME_CONVERSION[time_period], request.form['password']
+    return TIME_CONVERSION[time_period], request.form['password'], request.form['email'], request.form['message']
+
 
 
 @app.route('/', methods=['GET'])
@@ -158,8 +167,11 @@ def index():
 
 @app.route('/', methods=['POST'])
 def handle_password():
-    ttl, password = clean_input()
-    token = set_password(password, ttl)
+    # ttl, password = clean_input() #edgarin
+    ttl, password, email, message = clean_input()
+    contentObj = {'password': password, 'email': email, 'message': message} #edgarin
+    print json.dumps(contentObj)
+    token = set_password( json.dumps(contentObj), ttl)
 
     if NO_SSL:
         base_url = request.url_root
@@ -181,10 +193,10 @@ def preview_password(password_key):
 @app.route('/<password_key>', methods=['POST'])
 def show_password(password_key):
     password_key = url_unquote_plus(password_key)
-    password = get_password(password_key)
-    if not password:
+    contentStr = get_password(password_key)
+    if not contentStr:
         abort(404)
-
+    password = json.loads(contentStr)['password']
     return render_template('password.html', password=password)
 
 
