@@ -15,7 +15,7 @@ Tyrion
 It's a fork of snappass, but it sends an email with a custom message when the password is seen (currently supports only sending from gmail)
 
 The name comes from Game of Thrones' Tyron character. In season 2, he reveals different secrets to different people.
-    When the secret got revealed, he new who did it due to its content.
+When the secret got revealed, he new who did it due to its content.
 
 This is a web app that lets you share passwords securely.
 
