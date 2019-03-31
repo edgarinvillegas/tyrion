@@ -3,6 +3,8 @@ import re
 import sys
 import uuid
 import json
+import smtplib
+from email.mime.text import MIMEText
 
 import redis
 
@@ -40,6 +42,30 @@ REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion')
 
 TIME_CONVERSION = {'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
 
+def send_mail(raw_to, body):
+    gmail_user = os.environ.get('SNAPPASS_EMAIL', 'secret@mojix.com')
+    gmail_password = os.environ.get('SNAPPASS_EMAIL_PASSWORD', '')
+
+    if not gmail_user or not gmail_password:
+        return
+
+    sent_from = gmail_user
+    # Create a text/plain message
+    msg = MIMEText(body, 'plain', 'utf-8')
+    msg['Subject'] = 'Someone saw your secret'
+    msg['From'] = sent_from
+    to = [x.strip() for x in raw_to.split(',')]     #Split by comma and trim
+    msg['To'] = ', '.join(to)
+
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(gmail_user, gmail_password)
+        server.sendmail(sent_from, to, msg.as_string())
+        server.close()
+        print 'Email sent!'
+    except:
+        print 'Something went wrong...'
 
 def check_redis_alive(fn):
     def inner(*args, **kwargs):
@@ -123,11 +149,11 @@ def get_password(token):
             password = decrypt(password, decryption_key)
 
         contentStr = password.decode('utf-8')
-        print contentStr
         contentObj = json.loads(contentStr)
-        print contentObj
-        print contentObj['email']
-        print contentObj['message']
+        email = contentObj['email'].strip()
+        if email:
+            body = contentObj['message']
+            send_mail(email, body)
         return contentStr
 
 @check_redis_alive
