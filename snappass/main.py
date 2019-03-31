@@ -65,7 +65,7 @@ def send_mail(raw_to, body):
         server.close()
         print 'Email sent!'
     except:
-        print 'Something went wrong...'
+        print 'Error: email not sent'
 
 def check_redis_alive(fn):
     def inner(*args, **kwargs):
