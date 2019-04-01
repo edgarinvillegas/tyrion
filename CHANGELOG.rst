@@ -1,3 +1,8 @@
+Version Tyrion 2.0.1
+--------------------
+ * First Tyrion RC
+ * Allows sending an email (from gmail) with a custom message when the secret is revealed
+
 Version 1.4.1
 -------------
  * Switch to local (non-CDN) Font Awesome assets

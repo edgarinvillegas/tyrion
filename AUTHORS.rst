@@ -20,3 +20,5 @@ Thanks a lot for the contributions of:
 * James Barclay
 * Thomas Decaux
 * Lauri Lubi
+
+"tyrion" is originally written by Edgar Villegas
