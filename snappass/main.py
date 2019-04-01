@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import uuid
+import datetime
 import json
 import smtplib
 from email.mime.text import MIMEText
@@ -43,7 +44,7 @@ REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion')
 TIME_CONVERSION = {'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
 
 def send_mail(raw_to, body):
-    gmail_user = os.environ.get('SNAPPASS_EMAIL', 'secret@mojix.com')
+    gmail_user = os.environ.get('SNAPPASS_EMAIL', 'secret.mojix@gmail.com')
     gmail_password = os.environ.get('SNAPPASS_EMAIL_PASSWORD', '')
 
     if not gmail_user or not gmail_password:
@@ -129,10 +130,17 @@ def set_password(password, ttl):
     token = TOKEN_SEPARATOR.join([storage_key, encryption_key])
     return token
 
+def get_email_body(contentObj):
+    # return contentObj['message']
+    timestamp = contentObj['timestamp'].replace('T', ' ')
+    message = contentObj['message']
+    body = u'Someone saw your secret set on {} (server time). '.format(timestamp)
+    if message:
+        body = body + u'Your additional message was:\n\n{}'.format(message)
+    return body
 
 @check_redis_alive
 def get_password(token):
-    print 'GET PASSWORD'
     """
     From a given token, return the initial password.
 
@@ -152,8 +160,7 @@ def get_password(token):
         contentObj = json.loads(contentStr)
         email = contentObj['email'].strip()
         if email:
-            body = contentObj['message']
-            send_mail(email, body)
+            send_mail(email, get_email_body(contentObj))
         return contentStr
 
 @check_redis_alive
@@ -195,8 +202,9 @@ def index():
 def handle_password():
     # ttl, password = clean_input() #edgarin
     ttl, password, email, message = clean_input()
-    contentObj = {'password': password, 'email': email, 'message': message} #edgarin
-    print json.dumps(contentObj)
+    timestamp = datetime.datetime.now().replace(microsecond=0).isoformat()
+    contentObj = {'password': password, 'email': email, 'message': message, 'timestamp': timestamp} #edgarin
+    # print json.dumps(contentObj)
     token = set_password( json.dumps(contentObj), ttl)
 
     if NO_SSL:
