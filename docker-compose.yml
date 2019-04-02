@@ -6,7 +6,7 @@ services:
         build: .
         image: pinterest/snappass
         ports:
-            - "5001:5001"
+            - "5002:5002"
         stop_signal: SIGINT
         environment:
             - REDIS_HOST=redis

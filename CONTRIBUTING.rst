@@ -93,7 +93,7 @@ Here's how to set up ``snappass`` for local development.
       export NO_SSL=True
     $ flask run
 
-  You now have a running instance on localhost:5001/
+  You now have a running instance on localhost:5002/
 
 6. When you're done making changes, check that your changes pass the tests and
    flake8::
