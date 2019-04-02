@@ -63,7 +63,7 @@ Installation
 
     $ pip install snappass
     $ snappass
-    * Running on http://0.0.0.0:5000/
+    * Running on http://0.0.0.0:5001/
     * Restarting with reloader
 
 Configuration
@@ -107,4 +107,4 @@ Alternatively, you can use `Docker`_ and `Docker Compose`_ to install and run Sn
 
     $ docker-compose up -d
 
-This will pull all dependencies, i.e. Redis and appropriate Python version (3.7), then start up SnapPass and Redis server. SnapPass server is accessible at: http://localhost:5000
+This will pull all dependencies, i.e. Redis and appropriate Python version (3.7), then start up SnapPass and Redis server. SnapPass server is accessible at: http://localhost:5001

@@ -44,7 +44,7 @@ REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion')
 TIME_CONVERSION = {'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
 
 def send_mail(raw_to, body):
-    gmail_user = os.environ.get('SNAPPASS_EMAIL', 'secret.mojix@gmail.com')
+    gmail_user = os.environ.get('SNAPPASS_EMAIL', '')
     gmail_password = os.environ.get('SNAPPASS_EMAIL_PASSWORD', '')
 
     if not gmail_user or not gmail_password:
