@@ -64,9 +64,9 @@ def send_mail(raw_to, body):
         server.login(gmail_user, gmail_password)
         server.sendmail(sent_from, to, msg.as_string())
         server.close()
-        print 'Email sent!'
+        print('Email sent!')
     except:
-        print 'Error: email not sent'
+        print('Error: email not sent')
 
 def check_redis_alive(fn):
     def inner(*args, **kwargs):
@@ -204,7 +204,7 @@ def handle_password():
     ttl, password, email, message = clean_input()
     timestamp = datetime.datetime.now().replace(microsecond=0).isoformat()
     contentObj = {'password': password, 'email': email, 'message': message, 'timestamp': timestamp} #edgarin
-    # print json.dumps(contentObj)
+    # print(json.dumps(contentObj))
     token = set_password( json.dumps(contentObj), ttl)
 
     if NO_SSL:
