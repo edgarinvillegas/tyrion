@@ -39,18 +39,18 @@ else:
     redis_db = os.environ.get('SNAPPASS_REDIS_DB', 0)
     redis_client = redis.StrictRedis(
         host=redis_host, port=redis_port, db=redis_db)
-REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion')
+REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion-')
 
-TIME_CONVERSION = {'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
+TIME_CONVERSION = {'sixmonths': 16070400, 'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
+
+gmail_email = os.environ.get('SNAPPASS_EMAIL', '')
+gmail_password = os.environ.get('SNAPPASS_EMAIL_PASSWORD', '')
 
 def send_mail(raw_to, body):
-    gmail_user = os.environ.get('SNAPPASS_EMAIL', '')
-    gmail_password = os.environ.get('SNAPPASS_EMAIL_PASSWORD', '')
-
-    if not gmail_user or not gmail_password:
+    if not gmail_email or not gmail_password:
         return
 
-    sent_from = gmail_user
+    sent_from = gmail_email
     # Create a text/plain message
     msg = MIMEText(body, 'plain', 'utf-8')
     msg['Subject'] = 'Someone saw your secret'
@@ -61,12 +61,14 @@ def send_mail(raw_to, body):
     try:
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()
-        server.login(gmail_user, gmail_password)
+        server.login(gmail_email, gmail_password)
         server.sendmail(sent_from, to, msg.as_string())
         server.close()
         print('Email sent!')
+        return True
     except:
         print('Error: email not sent')
+        return False
 
 def check_redis_alive(fn):
     def inner(*args, **kwargs):
@@ -212,7 +214,7 @@ def handle_password():
     else:
         base_url = request.url_root.replace("http://", "https://")
     link = base_url + url_quote_plus(token)
-    return render_template('confirm.html', password_link=link)
+    return render_template('confirm.html', password_link=link, timestamp=timestamp.replace('T', ' '))
 
 
 @app.route('/<password_key>', methods=['GET'])
@@ -230,8 +232,10 @@ def show_password(password_key):
     contentStr = get_password(password_key)
     if not contentStr:
         abort(404)
-    password = json.loads(contentStr)['password']
-    return render_template('password.html', password=password)
+    contentObj = json.loads(contentStr)
+    password = contentObj['password']
+    console_log = 'Email sent from ' + gmail_email + ' to ' + contentObj['email']
+    return render_template('password.html', password=password, log=console_log)
 
 
 @check_redis_alive
