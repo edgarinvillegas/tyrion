@@ -5,6 +5,7 @@ import uuid
 import datetime
 import json
 import smtplib
+import threading
 from email.mime.text import MIMEText
 
 import redis
@@ -42,18 +43,33 @@ else:
 REDIS_PREFIX = os.environ.get('REDIS_PREFIX', 'tyrion-')
 
 TIME_CONVERSION = {'sixmonths': 16070400, 'quarter': 8035200, 'month': 2592000, 'week': 604800, 'day': 86400, 'hour': 3600}
+TIME_LABELS = {'sixmonths': 'Six months', 'quarter': 'Quarter', 'month': 'Month', 'week': 'Week', 'day': 'Day', 'hour': 'Hour'}
 
 gmail_email = os.environ.get('SNAPPASS_EMAIL', '')
 gmail_password = os.environ.get('SNAPPASS_EMAIL_PASSWORD', '')
 
-def send_mail(raw_to, body):
+#Based on https://stackoverflow.com/questions/4447081/how-to-send-asynchronous-email-using-django
+class EmailThread(threading.Thread):
+    def __init__(self, subject, raw_to, body):
+        self.subject = subject
+        self.raw_to = raw_to
+        self.body = body
+        threading.Thread.__init__(self)
+
+    def run (self):
+        send_mail(self.subject, self.raw_to, self.body)
+
+def async_send_mail(subject, raw_to, body):
+    EmailThread(subject, raw_to, body).start()
+
+def send_mail(subject, raw_to, body):
     if not gmail_email or not gmail_password:
         return
 
     sent_from = gmail_email
     # Create a text/plain message
     msg = MIMEText(body, 'plain', 'utf-8')
-    msg['Subject'] = 'Someone saw your secret'
+    msg['Subject'] = subject
     msg['From'] = sent_from
     to = [x.strip() for x in raw_to.split(',')]     #Split by comma and trim
     msg['To'] = ', '.join(to)
@@ -132,13 +148,23 @@ def set_password(password, ttl):
     token = TOKEN_SEPARATOR.join([storage_key, encryption_key])
     return token
 
-def get_email_body(contentObj):
+def get_revealed_email_body(contentObj):
     # return contentObj['message']
     timestamp = contentObj['timestamp'].replace('T', ' ')
     message = contentObj['message']
     body = u'Someone saw your secret set on {} (server time). '.format(timestamp)
     if message:
-        body = body + u'Your additional message was:\n\n{}'.format(message)
+        body = body + u'\nContext info:\n\n{}'.format(message)
+    return body
+
+def get_secret_set_email_body(contentObj, time_period):
+    # return contentObj['message']
+    timestamp = contentObj['timestamp'].replace('T', ' ')
+    message = contentObj['message']
+    body = u'You set a secret on {} (server time). '.format(timestamp)
+    body = body + u'\nExpiration: {}'.format(TIME_LABELS[time_period])
+    if message:
+        body = body + u'\nContext info:\n\n{}'.format(message)
     return body
 
 @check_redis_alive
@@ -162,7 +188,7 @@ def get_password(token):
         contentObj = json.loads(contentStr)
         email = contentObj['email'].strip()
         if email:
-            send_mail(email, get_email_body(contentObj))
+            async_send_mail('Someone saw your secret', email, get_revealed_email_body(contentObj))
         return contentStr
 
 @check_redis_alive
@@ -191,7 +217,7 @@ def clean_input():
         abort(400)
 
     #return TIME_CONVERSION[time_period], request.form['password']
-    return TIME_CONVERSION[time_period], request.form['password'], request.form['email'], request.form['message']
+    return time_period, request.form['password'], request.form['email'], request.form['message']
 
 
 
@@ -203,7 +229,8 @@ def index():
 @app.route('/', methods=['POST'])
 def handle_password():
     # ttl, password = clean_input() #edgarin
-    ttl, password, email, message = clean_input()
+    time_period, password, email, message = clean_input()
+    ttl = TIME_CONVERSION[time_period]
     timestamp = datetime.datetime.now().replace(microsecond=0).isoformat()
     contentObj = {'password': password, 'email': email, 'message': message, 'timestamp': timestamp} #edgarin
     # print(json.dumps(contentObj))
@@ -214,6 +241,8 @@ def handle_password():
     else:
         base_url = request.url_root.replace("http://", "https://")
     link = base_url + url_quote_plus(token)
+    async_send_mail('You set a secret', contentObj['email'], get_secret_set_email_body(contentObj, time_period))
+
     return render_template('confirm.html', password_link=link, timestamp=timestamp.replace('T', ' '))
 
 
