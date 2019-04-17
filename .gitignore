@@ -1,3 +1,6 @@
+#IDE
+.idea/
+
 .project
 *.rdb
 junit*xml
