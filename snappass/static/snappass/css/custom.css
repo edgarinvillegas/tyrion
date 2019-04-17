@@ -15,3 +15,10 @@ input[readonly].readonly-text {
     background-color: #fff;
     cursor: text;
 }
+
+.error {
+    border-color: red;
+}
+label.error {
+    color: red;
+}

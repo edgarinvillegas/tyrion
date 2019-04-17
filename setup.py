@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='snappass',
-    version='2.0.1',
+    version='2.1.0',
     description="It's like SnapChat... for Passwords.",
     long_description=(open('README.rst').read() + '\n\n' +
                       open('AUTHORS.rst').read()),

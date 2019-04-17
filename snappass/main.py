@@ -154,7 +154,7 @@ def get_revealed_email_body(contentObj):
     message = contentObj['message']
     body = u'Someone saw your secret set on {} (server time). '.format(timestamp)
     if message:
-        body = body + u'\nContext info:\n\n{}'.format(message)
+        body = body + u'\nContext info:\n{}'.format(message)
     return body
 
 def get_secret_set_email_body(contentObj, time_period):
@@ -164,7 +164,7 @@ def get_secret_set_email_body(contentObj, time_period):
     body = u'You set a secret on {} (server time). '.format(timestamp)
     body = body + u'\nExpiration: {}'.format(TIME_LABELS[time_period])
     if message:
-        body = body + u'\nContext info:\n\n{}'.format(message)
+        body = body + u'\nContext info:\n{}'.format(message)
     return body
 
 @check_redis_alive
