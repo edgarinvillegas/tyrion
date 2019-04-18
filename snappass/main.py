@@ -60,7 +60,6 @@ class EmailThread(threading.Thread):
         send_mail(self.subject, self.raw_to, self.body)
 
 def async_send_mail(subject, raw_to, body):
-    print('send_mail commented out')
     EmailThread(subject, raw_to, body).start()
 
 def send_mail(subject, raw_to, body):
@@ -178,7 +177,7 @@ def get_secret_set_email_body(contentObj, time_period):
     body = u'You set a secret on {} (server time). '.format(timestamp)
     body = body + u'\nExpiration: {}'.format(expiration)
     if message:
-        body = body + u'\nContext info:\n{}'.format(message)
+        body = body + u'\n---Context info:---\n{}'.format(message)
     return body
 
 @check_redis_alive
