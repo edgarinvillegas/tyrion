@@ -157,12 +157,22 @@ def get_revealed_email_body(contentObj):
         body = body + u'\nContext info:\n{}'.format(message)
     return body
 
+def get_expiry_date_formatted(time_period):
+    ttl = TIME_CONVERSION[time_period]
+    if ttl <= 86400:
+        return TIME_LABELS[time_period]
+    else:
+        return (datetime.datetime.now() + datetime.timedelta(seconds=ttl)).strftime('%Y-%m-%d')
+
+
 def get_secret_set_email_body(contentObj, time_period):
     # return contentObj['message']
     timestamp = contentObj['timestamp'].replace('T', ' ')
     message = contentObj['message']
+    expiration = get_expiry_date_formatted(time_period)
+
     body = u'You set a secret on {} (server time). '.format(timestamp)
-    body = body + u'\nExpiration: {}'.format(TIME_LABELS[time_period])
+    body = body + u'\nExpiration: {}'.format(expiration)
     if message:
         body = body + u'\nContext info:\n{}'.format(message)
     return body
@@ -233,6 +243,8 @@ def handle_password():
     ttl = TIME_CONVERSION[time_period]
     timestamp = datetime.datetime.now().replace(microsecond=0).isoformat()
     contentObj = {'password': password, 'email': email, 'message': message, 'timestamp': timestamp} #edgarin
+    expiration = get_expiry_date_formatted(time_period)
+
     # print(json.dumps(contentObj))
     token = set_password( json.dumps(contentObj), ttl)
 
@@ -243,7 +255,7 @@ def handle_password():
     link = base_url + url_quote_plus(token)
     async_send_mail('You set a secret', contentObj['email'], get_secret_set_email_body(contentObj, time_period))
 
-    return render_template('confirm.html', password_link=link, timestamp=timestamp.replace('T', ' '))
+    return render_template('confirm.html', password_link=link, timestamp=timestamp.replace('T', ' '), expiration=expiration)
 
 
 @app.route('/<password_key>', methods=['GET'])
@@ -271,6 +283,8 @@ def show_password(password_key):
 def main():
     app.run(host='0.0.0.0', port=5002)
 
+# print('Expiry date: ' + get_expiry_date_formatted('week'))
 
 if __name__ == '__main__':
     main()
+
