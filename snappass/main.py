@@ -60,6 +60,7 @@ class EmailThread(threading.Thread):
         send_mail(self.subject, self.raw_to, self.body)
 
 def async_send_mail(subject, raw_to, body):
+    print('send_mail commented out')
     EmailThread(subject, raw_to, body).start()
 
 def send_mail(subject, raw_to, body):
@@ -80,10 +81,10 @@ def send_mail(subject, raw_to, body):
         server.login(gmail_email, gmail_password)
         server.sendmail(sent_from, to, msg.as_string())
         server.close()
-        print('Email sent!')
+        print('Email sent to ' + raw_to)
         return True
     except:
-        print('Error: email not sent')
+        print('Error: email not sent to ' + raw_to)
         return False
 
 def check_redis_alive(fn):
@@ -152,9 +153,12 @@ def get_revealed_email_body(contentObj):
     # return contentObj['message']
     timestamp = contentObj['timestamp'].replace('T', ' ')
     message = contentObj['message']
+    revealerMessage = get_revealer_message()
     body = u'Someone saw your secret set on {} (server time). '.format(timestamp)
     if message:
-        body = body + u'\nContext info:\n{}'.format(message)
+        body = body + u'\n---Context info:---\n{}'.format(message)
+    if revealerMessage:
+        body = body + u'\n---Message sent by revealer:---\n{}'.format(revealerMessage)
     return body
 
 def get_expiry_date_formatted(time_period):
@@ -229,7 +233,10 @@ def clean_input():
     #return TIME_CONVERSION[time_period], request.form['password']
     return time_period, request.form['password'], request.form['email'], request.form['message']
 
-
+def get_revealer_message():
+    if request.form.get('sendRevealerMessage', '') == 'on':
+        return request.form.get('revealerMessage', '').strip()
+    return ''
 
 @app.route('/', methods=['GET'])
 def index():
@@ -282,8 +289,6 @@ def show_password(password_key):
 @check_redis_alive
 def main():
     app.run(host='0.0.0.0', port=5002)
-
-# print('Expiry date: ' + get_expiry_date_formatted('week'))
 
 if __name__ == '__main__':
     main()

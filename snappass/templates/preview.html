@@ -3,15 +3,30 @@
 {% block content %}
 <div class="container">
   <section>
-    <div class="page-header">
-      <h1>Secret</h1>
-    </div>
-    <p class="lead">You can only reveal the secret once!</p>
-    <div class="row">
-      <div class="col-sm-6 margin-bottom-10">
-        <button id="revealSecret" type="button" class="btn-lg btn-primary">Reveal secret</button>
+    <form id="revealSecretForm" method="post">
+      <div class="page-header">
+        <h1>Secret</h1>
       </div>
-    </div>
+      <p class="lead">You can only reveal the secret once!</p>
+      <input type="checkbox" id="sendRevealerMessage" name="sendRevealerMessage" value="on" />
+      <label for="sendRevealerMessage" class="lead small">Send additional message to secret creator </label>
+      <p>
+        <textarea
+            rows="5"
+            cols="50"
+            id="revealerMessage"
+            name="revealerMessage"
+            autofocus="true"
+            class="form-control"
+            style="display: none"
+            placeholder="Message to be sent to secret creator, like who you are"></textarea>
+      </p>
+      <div class="row">
+        <div class="col-sm-6 margin-bottom-10">
+          <button id="revealSecret" type="submit" class="btn-lg btn-primary">Reveal secret</button>
+        </div>
+      </div>
+    </form>
   </section>
 </div>
 {% endblock %}
