@@ -2,16 +2,6 @@
 Tyrion
 ========
 
-|pypi| |build|
-
-.. |pypi| image:: https://img.shields.io/pypi/v/snappass.svg
-    :target: https://pypi.python.org/pypi/snappass
-    :alt: Latest version released on PyPI
-
-.. |build| image:: https://travis-ci.org/pinterest/snappass.svg
-    :target: http://travis-ci.org/pinterest/snappass
-    :alt: Build status
-
 It's a fork of snappass, but it sends an email with a custom message when the password is seen (currently supports only sending from gmail)
 
 The name comes from Game of Thrones' Tyron character. In season 2, he reveals different secrets to different people.
@@ -56,13 +46,13 @@ Requirements
 * Redis
 * Python 2.7+ or 3.4+ (both included)
 
-Installation
+Running in development mode
 ------------
 
 ::
 
-    $ pip install snappass
-    $ snappass
+    $ pip install snappass (quick way to install dependencies)
+    $ python snappass/main.py
     * Running on http://0.0.0.0:5002/
     * Restarting with reloader
 
@@ -94,6 +84,10 @@ need to change this.
 ``REDIS_URL``: (optional) will be used instead of ``REDIS_HOST``, ``REDIS_PORT``, and ``SNAPPASS_REDIS_DB`` to configure the Redis client object. For example: redis://username:password@localhost:6379/0
 
 ``REDIS_PREFIX``: (optional, defaults to ``"snappass"``) prefix used on redis keys to prevent collisions with other potential clients
+
+``SNAPPASS_EMAIL``: Sender email (only supports gmail for now)
+
+``SNAPPASS_EMAIL_PASSWORD``: Sender gmail password
 
 Docker
 ------
